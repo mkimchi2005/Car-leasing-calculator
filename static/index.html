@@ -313,6 +313,26 @@ td.net-val { font-weight: 700; font-size: 15px; white-space: nowrap; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* auto-calculated fields */
+.field input.auto {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0369a1;
+  font-weight: 700;
+  cursor: default;
+}
+.field .auto-label {
+  font-size: 10.5px;
+  color: #0ea5e9;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.cap-monthly {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-top: 3px;
+}
+
 @media (max-width: 680px) {
   .app-header { padding: 16px 18px; }
   .app-header h1 { font-size: 18px; }
@@ -348,7 +368,7 @@ td.net-val { font-weight: 700; font-size: 15px; white-space: nowrap; }
     </div>
     <div class="section-body open" id="body1">
 
-      <div class="form-section-title">📋 נתוני שכר — מה שולם בפועל</div>
+      <div class="form-section-title">📋 נתוני שכר</div>
       <div class="form-grid">
         <div class="field">
           <label>שכר ברוטו בסיס (₪)</label>
@@ -357,11 +377,13 @@ td.net-val { font-weight: 700; font-size: 15px; white-space: nowrap; }
         </div>
         <div class="field">
           <label>מס הכנסה (₪)</label>
-          <input type="number" id="f-it" value="" min="0" step="1" placeholder="0" oninput="onParamsChange()">
+          <input type="number" id="f-it" class="auto" readonly tabindex="-1" value="" placeholder="מחושב אוטומטית">
+          <span class="auto-label">🔄 מחושב לפי מדרגות מס 2025</span>
         </div>
         <div class="field">
           <label>ביטוח לאומי + בריאות (₪)</label>
-          <input type="number" id="f-ni" value="" min="0" step="1" placeholder="לדוגמה: 1500" oninput="onParamsChange()">
+          <input type="number" id="f-ni" class="auto" readonly tabindex="-1" value="" placeholder="מחושב אוטומטית">
+          <span class="auto-label">🔄 מחושב אוטומטית</span>
         </div>
         <div class="field">
           <label>הפרשות סוציאליות (₪)</label>
@@ -369,9 +391,24 @@ td.net-val { font-weight: 700; font-size: 15px; white-space: nowrap; }
           <span class="hint">פנסיה, קרן השתלמות וכד׳ — לא ישתנה עם החלפת רכב</span>
         </div>
         <div class="field">
-          <label>שכר נטו בפועל (₪) ★</label>
-          <input type="number" id="f-net" value="" min="0" step="0.01" placeholder="לדוגמה: 16000" oninput="onParamsChange()">
-          <span class="hint">מהתלוש בפועל — בסיס כל ההשוואות (לא מחושב)</span>
+          <label>ניכויים אחרים (₪)</label>
+          <input type="number" id="f-other" value="" min="0" step="0.01" placeholder="0" oninput="onParamsChange()">
+          <span class="hint">הלוואות, ביטוחים וכד׳ — ניכויים קבועים נוספים</span>
+        </div>
+        <div class="field">
+          <label>הכנסה שנתית נוספת (₪)</label>
+          <input type="number" id="f-annual-extra" value="" min="0" step="1000" placeholder="0" oninput="onParamsChange()">
+          <span class="hint">בונוס, אופציות, עמלות — משפיע על המדרגה השנתית האפקטיבית</span>
+        </div>
+        <div class="field">
+          <label>שכר נטו (₪)</label>
+          <input type="number" id="f-net" class="auto" readonly tabindex="-1" value="" placeholder="מחושב אוטומטית">
+          <span class="auto-label">🔄 ברוטו − מס − ל"א − הפרשות − ניכויים</span>
+        </div>
+        <div class="field">
+          <label>נטו בפועל מהתלוש (₪) ★</label>
+          <input type="number" id="f-net-actual" value="" min="0" step="0.01" placeholder="אופציונלי" oninput="onParamsChange()">
+          <span class="hint">מלא אם שונה מהמחושב (למשל בגלל הטבת מס מפנסיה). בסיס ההשוואה בטבלה</span>
         </div>
       </div>
 
@@ -390,12 +427,13 @@ td.net-val { font-weight: 700; font-size: 15px; white-space: nowrap; }
         <div class="field">
           <label>זיכוי ישוב מזכה — תקרה שנתית (₪)</label>
           <input type="number" id="f-area-cap" value="0" min="0" step="100" oninput="onParamsChange()">
-          <span class="hint">תקרה שנתית לזיכוי. 0 אם לא רלוונטי</span>
+          <span class="cap-monthly" id="area-cap-monthly"></span>
+          <span class="hint">תקרה שנתית לזיכוי. השאר 0 אם אין תקרה (= ללא הגבלה)</span>
         </div>
         <div class="field">
           <label>שיעור מס שולי (%)</label>
-          <input type="number" id="f-marginal" value="" min="0" max="100" step="1" placeholder="לדוגמה: 35" oninput="onParamsChange()">
-          <span class="hint">המדרגה שבה נמצאת — משפיע על עלות שווי השימוש</span>
+          <input type="text" id="f-marginal" class="auto" readonly tabindex="-1" value="" placeholder="מחושב אוטומטית">
+          <span class="auto-label">🔄 מחושב לפי מדרגת ההכנסה הנוכחית</span>
         </div>
       </div>
 
@@ -542,6 +580,69 @@ const cls   = n => (!n || Math.abs(n) < 0.5) ? 'neu' : (n > 0 ? 'pos' : 'neg');
 const esc   = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Israeli tax calculator — 2025 rates
+// ─────────────────────────────────────────────────────────────────────────────
+const BRACKETS = [
+  [7010,.10],[10060,.14],[16150,.20],[22440,.31],
+  [46690,.35],[60130,.47],[Infinity,.50],
+];
+const NI_THRESH = 7522, NI_MAX = 50695;
+
+function calcIT(gross, cp, areaPct, areaCap) {
+  // Monthly income tax (no bonus)
+  let tax = 0, prev = 0;
+  for (const [ceil, rate] of BRACKETS) {
+    if (gross <= prev) break;
+    tax += (Math.min(gross, ceil) - prev) * rate;
+    prev = ceil;
+  }
+  tax -= cp * 242;
+  if (areaPct > 0) {
+    const qualifying = (areaCap > 0) ? Math.min(gross, areaCap / 12) : gross;
+    tax -= qualifying * areaPct / 100;
+  }
+  return Math.max(0, tax);
+}
+function calcIT_annual(annualGross, cp, areaPct, areaCap) {
+  // Annual income tax using annual-equivalent brackets
+  let tax = 0, prev = 0;
+  for (const [ceil, rate] of BRACKETS) {
+    const aCeil = ceil === Infinity ? Infinity : ceil * 12;
+    if (annualGross <= prev) break;
+    tax += (Math.min(annualGross, aCeil) - prev) * rate;
+    prev = aCeil;
+  }
+  tax -= cp * 242 * 12;
+  if (areaPct > 0) {
+    const qualifying = (areaCap > 0) ? Math.min(annualGross, areaCap) : annualGross;
+    tax -= qualifying * areaPct / 100;
+  }
+  return Math.max(0, tax);
+}
+function calcIT_eff(monthlyTaxable, annualExtra, cp, areaPct, areaCap) {
+  // Effective monthly IT — annual basis when bonus exists
+  if (annualExtra > 0)
+    return calcIT_annual(monthlyTaxable * 12 + annualExtra, cp, areaPct, areaCap) / 12;
+  return calcIT(monthlyTaxable, cp, areaPct, areaCap);
+}
+function calcNI(g) {
+  const x = Math.min(g, NI_MAX);
+  return x <= NI_THRESH ? x*.004 : NI_THRESH*.004 + (x-NI_THRESH)*.07;
+}
+function calcHI(g) {
+  const x = Math.min(g, NI_MAX);
+  return x <= NI_THRESH ? x*.031 : NI_THRESH*.031 + (x-NI_THRESH)*.05;
+}
+function marginalITrate(g) {
+  for (const [ceil, rate] of BRACKETS) if (g <= ceil) return rate;
+  return .50;
+}
+function marginalNIHIrate(g) {
+  if (g <= 0 || g > NI_MAX) return 0;
+  return g <= NI_THRESH ? .035 : .12;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Section toggle
 // ─────────────────────────────────────────────────────────────────────────────
 function toggleSection(n) {
@@ -552,37 +653,154 @@ function toggleSection(n) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Salary summary
+// Salary summary + auto-calc
 // ─────────────────────────────────────────────────────────────────────────────
 function onParamsChange() {
-  $('s-net').textContent         = `₪${fmt(v('f-net'),2)}`;
-  $('s-gross').textContent       = `₪${fmt(v('f-gross'),0)}`;
-  $('s-budget').textContent      = `₪${fmt(v('f-budget'),0)}`;
-  $('s-cur-benefit').textContent = `₪${fmt(v('f-cur-benefit'),0)}`;
-  $('s-soc').textContent         = `₪${fmt(v('f-soc'),2)}`;
+  try {
+  const gross       = v('f-gross');
+  const cp          = v('f-cp');
+  const areaPct     = v('f-area-pct');
+  const areaCap     = v('f-area-cap');
+  const curBen      = v('f-cur-benefit');
+  const curCost     = v('f-cur-cost');
+  const budget      = v('f-budget');
+  const soc         = v('f-soc');
+  const other       = v('f-other');
+  const annualExtra = v('f-annual-extra');
+
+  // תקציב רכב: עודף מוסיף לנטו, גירעון מנוכה מהנטו
+  const surplus  = Math.max(0, budget - curCost);
+  const deficit  = Math.max(0, curCost - budget);
+  const cash     = gross + surplus;
+
+  // הכנסה חייבת במס: מזומן + שווי שימוש (שווי שימוש לא מזומן — חייב במס בלבד)
+  const taxable = cash + curBen;
+
+  const it   = calcIT_eff(taxable, annualExtra, cp, areaPct, areaCap);
+  const nihi = calcNI(taxable) + calcHI(taxable);
+  const net  = cash - it - nihi - soc - other - deficit;
+
+  // Update auto-calculated fields
+  $('f-it').value  = Math.round(it);
+  $('f-ni').value  = Math.round(nihi);
+  $('f-net').value = net.toFixed(2);
+
+  // Marginal rate (text field — shows formatted string)
+  const mIT   = marginalITrate(taxable);
+  const mNIHI = marginalNIHIrate(taxable);
+  $('f-marginal').value = `${Math.round((mIT+mNIHI)*100)}%  (מס ${Math.round(mIT*100)}% + ל"א ${Math.round(mNIHI*100)}%)`;
+
+  // Monthly cap display
+  const capEl = $('area-cap-monthly');
+  capEl.textContent = areaCap > 0 ? `= ₪${fmt(areaCap/12, 0)} לחודש` : '';
+
+  // Summary bar
+  const displayNet = v('f-net-actual') || net;
+  $('s-net').textContent         = `₪${fmt(displayNet, 2)}`;
+  $('s-gross').textContent       = `₪${fmt(gross, 0)}`;
+  $('s-budget').textContent      = `₪${fmt(v('f-budget'), 0)}`;
+  $('s-cur-benefit').textContent = `₪${fmt(curBen, 0)}`;
+  $('s-soc').textContent         = `₪${fmt(soc, 2)}`;
+
   updateBtn();
+
+  // If results are already showing — recalculate instantly in JS
+  if ($('results').style.display !== 'none') recalcJS();
+  } catch(e) { console.error('onParamsChange error:', e); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Full client-side recalculation (mirrors Python calculate_all)
+// ─────────────────────────────────────────────────────────────────────────────
+function recalcJS() {
+  if (!state.cars.length) return;
+
+  const gross       = v('f-gross');
+  const cp          = v('f-cp');
+  const areaPct     = v('f-area-pct');
+  const areaCap     = v('f-area-cap');
+  const budget      = v('f-budget');
+  const curBen      = v('f-cur-benefit');
+  const curCost     = v('f-cur-cost');
+  const soc         = v('f-soc') + v('f-other');
+  const annualExtra = v('f-annual-extra');
+  const netActual   = v('f-net-actual') || v('f-net');
+
+  const eff = (monthlyTaxable) => calcIT_eff(monthlyTaxable, annualExtra, cp, areaPct, areaCap);
+
+  // ── Current car model (for net_adjustment) ──
+  const curSurplus  = Math.max(0, budget - curCost);
+  const curDeficit  = Math.max(0, curCost - budget);
+  const curCash     = gross + curSurplus;
+  const curTaxable  = curCash + curBen;
+  const curIT       = eff(curTaxable);
+  const curNIHI     = calcNI(curTaxable) + calcHI(curTaxable);
+  const curModelNet = curCash - curIT - curNIHI - soc - curDeficit;
+  const netAdj      = netActual - curModelNet;
+
+  // ── No-car baseline ──
+  const ncTaxable  = gross + budget;
+  const ncIT       = eff(ncTaxable);
+  const ncNIHI     = calcNI(ncTaxable) + calcHI(ncTaxable);
+  const ncModelNet = ncTaxable - ncIT - ncNIHI - soc;
+  const ncExpected = ncModelNet + netAdj;
+
+  // ── Per-car ──
+  const cars = state.cars.map(car => {
+    const surplus  = Math.max(0, budget - car.employee_cost);
+    const deficit  = Math.max(0, car.employee_cost - budget);
+    const cash     = gross + surplus;
+    const taxable  = cash + car.benefit_value;
+    const it       = eff(taxable);
+    const nihi     = calcNI(taxable) + calcHI(taxable);
+    const modelNet = cash - it - nihi - soc - deficit;
+    const expected = modelNet + netAdj;
+    return {
+      manufacturer:     car.manufacturer,
+      model:            car.model,
+      employee_cost:    car.employee_cost,
+      benefit_value:    car.benefit_value,
+      expected_net:     expected,
+      delta_vs_current: expected - netActual,
+      it_delta:         it - curIT,
+      ni_hi_delta:      nihi - curNIHI,
+      budget_effect:    surplus - deficit,
+    };
+  });
+
+  const data = {
+    net_actual:      netActual,
+    no_car_expected: ncExpected,
+    no_car_delta:    ncExpected - netActual,
+    cars,
+  };
+  state.result = data;
+  renderResults(data);
 }
 
 function updateBtn() {
-  const ready = state.cars.length > 0 && v('f-net') > 0;
+  const ready = state.cars.length > 0 && v('f-gross') > 0;
   $('calc-btn').disabled = !ready;
   $('calc-hint').style.display = ready ? 'none' : '';
 }
 
 function salaryPayload() {
+  // Use actual pay-stub net if provided, otherwise use calculated net
+  const netActual = v('f-net-actual') || v('f-net');
   return {
     gross:             v('f-gross'),
     income_tax_actual: v('f-it'),
     ni_actual:         v('f-ni'),
     health_actual:     0,
-    social_deductions: v('f-soc'),
-    net_actual:        v('f-net'),
+    social_deductions: v('f-soc') + v('f-other'),  // combined fixed deductions
+    net_actual:        netActual,
     credit_points:     v('f-cp'),
     area_credit_pct:   v('f-area-pct'),
     area_credit_cap:   v('f-area-cap'),
     car_budget:        v('f-budget'),
     cur_car_benefit:   v('f-cur-benefit'),
     cur_car_cost:      v('f-cur-cost'),
+    annual_extra:      v('f-annual-extra'),
   };
 }
 

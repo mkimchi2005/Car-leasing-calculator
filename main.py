@@ -149,6 +149,7 @@ class SalaryPayload(BaseModel):
     car_budget: float = 3800
     cur_car_benefit: float = 0
     cur_car_cost: float = 0
+    annual_extra: float = 0
 
 
 class CalculateRequest(BaseModel):
@@ -171,6 +172,7 @@ async def calculate(req: CalculateRequest):
         car_budget         = req.salary.car_budget,
         cur_car_benefit    = req.salary.cur_car_benefit,
         cur_car_cost       = req.salary.cur_car_cost,
+        annual_extra       = req.salary.annual_extra,
     )
     cars = [CarOption(**c) for c in req.cars]
     res  = calculate_all(sal, cars)
