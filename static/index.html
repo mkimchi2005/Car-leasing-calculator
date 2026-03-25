@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מחשבון ליסינג — השפעה על שכר נטו</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Heebo', 'Arial Hebrew', Arial, sans-serif;
+  background: #f0f4f8;
+  color: #1e293b;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.app-header {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+  color: white;
+  padding: 22px 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 20px rgba(37,99,235,.35);
+}
+.app-header .logo { font-size: 28px; }
+.app-header h1 { font-size: 22px; font-weight: 700; letter-spacing: -.3px; }
+.app-header p  { font-size: 13px; opacity: .8; margin-top: 1px; }
+
+/* ── Layout ── */
+.page { max-width: 1180px; margin: 0 auto; padding: 28px 20px 60px; }
+
+/* ── Section cards ── */
+.section {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,.07);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s;
+}
+.section-head:hover { background: #f8fafc; }
+.section-num {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: white;
+  font-weight: 700;
+  font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.section-num.done { background: #16a34a; }
+.section-head h2 { font-size: 17px; font-weight: 700; flex: 1; }
+.section-head .chevron { font-size: 12px; color: #94a3b8; transition: transform .25s; }
+.section-head.open .chevron { transform: rotate(180deg); }
+.section-body { padding: 24px; display: none; }
+.section-body.open { display: block; }
+
+/* ── Form grid ── */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px 20px;
+}
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.field input {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-size: 15px;
+  font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+  direction: ltr;
+  text-align: right;
+  background: #fff;
+}
+.field input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+.field .hint { font-size: 11.5px; color: #94a3b8; margin-top: 2px; }
+
+.form-section-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  margin: 22px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.form-section-title:first-child { margin-top: 0; }
+
+/* ── Salary summary ── */
+.salary-summary {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.salary-summary .kv { display: flex; flex-direction: column; }
+.salary-summary .kv span:first-child { font-size: 11.5px; color: #3b82f6; font-weight: 600; }
+.salary-summary .kv span:last-child  { font-size: 16px; font-weight: 700; color: #1e3a5f; }
+
+/* ── Upload zone ── */
+.drop-zone {
+  border: 2.5px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 40px 24px;
+  text-align: center;
+  transition: background .2s, border-color .2s;
+  cursor: pointer;
+  position: relative;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+.drop-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.drop-zone .dz-icon { font-size: 40px; margin-bottom: 10px; }
+.drop-zone p { font-size: 15px; font-weight: 600; color: #475569; }
+.drop-zone .dz-sub { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+
+.upload-status {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  display: none;
+}
+.upload-status.success { background:#f0fdf4; border:1px solid #bbf7d0; color:#15803d; }
+.upload-status.error   { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; }
+
+/* column mapper */
+.col-mapper {
+  display: none;
+  margin-top: 20px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.col-mapper h3 { font-size: 14px; font-weight: 700; color: #92400e; margin-bottom: 14px; }
+.col-mapper .map-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+.col-mapper select {
+  width: 100%;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+}
+.col-mapper label { font-size: 12px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 22px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all .18s;
+}
+.btn-primary { background: #2563eb; color: white; }
+.btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,.3); }
+.btn-primary:disabled { background: #93c5fd; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-ghost { background: transparent; border: 1.5px solid #e2e8f0; color: #475569; }
+.btn-ghost:hover { background: #f1f5f9; }
+.btn-sm { padding: 7px 14px; font-size: 13px; }
+.btn-row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; align-items: center; }
+
+/* ── Results ── */
+#results { display: none; }
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.results-header h2 { font-size: 18px; font-weight: 700; }
+
+/* summary cards */
+.summary-cards { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.scard {
+  flex: 1; min-width: 150px;
+  background: white;
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  border-top: 4px solid #e2e8f0;
+}
+.scard.blue   { border-top-color: #2563eb; }
+.scard.green  { border-top-color: #16a34a; }
+.scard.red    { border-top-color: #dc2626; }
+.scard.yellow { border-top-color: #d97706; }
+.scard .sc-label { font-size: 11.5px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .4px; }
+.scard .sc-val   { font-size: 22px; font-weight: 800; color: #1e293b; margin: 2px 0; }
+.scard .sc-sub   { font-size: 12px; color: #64748b; }
+.scard .sc-sub .pos { color: #15803d; font-weight: 700; }
+.scard .sc-sub .neg { color: #dc2626; font-weight: 700; }
+
+/* table */
+.table-wrap { overflow-x: auto; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
+table.res-table { width: 100%; border-collapse: collapse; background: white; font-size: 14px; }
+table.res-table thead th {
+  background: #1e3a5f;
+  color: white;
+  padding: 13px 14px;
+  text-align: right;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  position: sticky; top: 0; z-index: 2;
+}
+table.res-table thead th:hover { background: #2563eb; }
+table.res-table thead th .si { font-size: 10px; opacity: .45; margin-right: 3px; }
+table.res-table thead th.sorted .si { opacity: 1; }
+table.res-table thead th.no-sort { cursor: default; }
+table.res-table thead th.no-sort:hover { background: #1e3a5f; }
+
+table.res-table tbody tr { border-bottom: 1px solid #f1f5f9; transition: background .1s; }
+table.res-table tbody tr:hover:not(.detail-tr) { background: #f8fafc; }
+table.res-table tbody tr.ref-nc  { background: #fffbeb; font-style: italic; }
+table.res-table tbody tr.ref-cur { background: #eff6ff; font-style: italic; }
+table.res-table tbody tr.best-row { background: #f0fdf4; }
+
+table.res-table td { padding: 11px 14px; vertical-align: middle; }
+.car-cell { font-weight: 600; }
+.car-cell .model-sub { font-size: 12px; color: #64748b; font-weight: 400; display: block; }
+
+td.num { text-align: left; direction: ltr; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.pos { color: #15803d; font-weight: 700; }
+td.neg { color: #dc2626; font-weight: 700; }
+td.neu { color: #64748b; }
+td.net-val { font-weight: 700; font-size: 15px; white-space: nowrap; }
+
+/* detail */
+.detail-tr { display: none; }
+.detail-tr.open { display: table-row; }
+.detail-td { background: #f8fafc; border-bottom: 2px solid #e2e8f0; padding: 0 18px; }
+.detail-panel {
+  padding: 16px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 14px;
+}
+.dp-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .5px; }
+.dp-val   { font-size: 15px; font-weight: 700; color: #1e293b; margin-top: 3px; }
+.dp-val.pos { color: #15803d; }
+.dp-val.neg { color: #dc2626; }
+
+.tag { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.tag.surplus { background: #dcfce7; color: #15803d; }
+.tag.deficit { background: #fee2e2; color: #b91c1c; }
+.tag.neutral { background: #f1f5f9; color: #64748b; }
+
+.notice {
+  background: #fffbeb; border: 1px solid #fde68a;
+  border-radius: 10px; padding: 11px 16px;
+  font-size: 13px; color: #92400e; margin-top: 14px;
+}
+
+.spinner {
+  width: 18px; height: 18px;
+  border: 3px solid rgba(255,255,255,.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  display: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 680px) {
+  .app-header { padding: 16px 18px; }
+  .app-header h1 { font-size: 18px; }
+  .page { padding: 14px 10px 40px; }
+  .form-grid { grid-template-columns: 1fr 1fr; }
+  .summary-cards { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="logo">🚗</div>
+  <div>
+    <h1>מחשבון ליסינג — השפעה על שכר נטו</h1>
+    <p>חישוב לפי מדרגות מס 2025 · ביטוח לאומי · בריאות · זיכויי מס</p>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 1 — Salary Parameters
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section" id="sec1">
+    <div class="section-head open" id="head1" onclick="toggleSection(1)">
+      <div class="section-num" id="num1">1</div>
+      <div>
+        <h2>נתוני תלוש שכר ופרמטרי מס</h2>
+        <p style="font-size:13px;color:#64748b;margin-top:1px">מלא לפי תלוש השכר האחרון שלך</p>
+      </div>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="section-body open" id="body1">
+
+      <div class="form-section-title">📋 נתוני שכר — מה שולם בפועל</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>שכר ברוטו בסיס (₪)</label>
+          <input type="number" id="f-gross" value="22536" min="0" step="1" oninput="onParamsChange()">
+          <span class="hint">ללא תקציב רכב וללא שווי שימוש</span>
+        </div>
+        <div class="field">
+          <label>מס הכנסה (₪)</label>
+          <input type="number" id="f-it" value="0" min="0" step="1" oninput="onParamsChange()">
+        </div>
+        <div class="field">
+          <label>ביטוח לאומי + בריאות (₪)</label>
+          <input type="number" id="f-ni" value="1502" min="0" step="1" oninput="onParamsChange()">
+        </div>
+        <div class="field">
+          <label>הפרשות סוציאליות (₪)</label>
+          <input type="number" id="f-soc" value="1915.14" min="0" step="0.01" oninput="onParamsChange()">
+          <span class="hint">פנסיה, קרן השתלמות וכד׳ — לא ישתנה עם החלפת רכב</span>
+        </div>
+        <div class="field">
+          <label>שכר נטו בפועל (₪) ★</label>
+          <input type="number" id="f-net" value="16560.72" min="0" step="0.01" oninput="onParamsChange()">
+          <span class="hint">מהתלוש בפועל — בסיס כל ההשוואות (לא מחושב)</span>
+        </div>
+      </div>
+
+      <div class="form-section-title">🧮 פרמטרי מס</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>סך נקודות זיכוי</label>
+          <input type="number" id="f-cp" value="11.75" min="0" step="0.25" oninput="onParamsChange()">
+          <span class="hint">₪242 לנקודה לחודש (2025)</span>
+        </div>
+        <div class="field">
+          <label>זיכוי ישוב מזכה — אחוז (%)</label>
+          <input type="number" id="f-area-pct" value="0" min="0" max="100" step="0.1" oninput="onParamsChange()">
+          <span class="hint">אחוז מההכנסה החייבת. 0 אם לא רלוונטי</span>
+        </div>
+        <div class="field">
+          <label>זיכוי ישוב מזכה — תקרה שנתית (₪)</label>
+          <input type="number" id="f-area-cap" value="0" min="0" step="100" oninput="onParamsChange()">
+          <span class="hint">תקרה שנתית לזיכוי. 0 אם לא רלוונטי</span>
+        </div>
+        <div class="field">
+          <label>שיעור מס שולי (%)</label>
+          <input type="number" id="f-marginal" value="47" min="0" max="100" step="1" oninput="onParamsChange()">
+          <span class="hint">המדרגה שבה נמצאת — משפיע על עלות שווי השימוש</span>
+        </div>
+      </div>
+
+      <div class="form-section-title">🚗 תקציב רכב ורכב נוכחי</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>תקציב רכב חודשי (₪)</label>
+          <input type="number" id="f-budget" value="3800" min="0" step="100" oninput="onParamsChange()">
+          <span class="hint">אם לא לוקח רכב — כל הסכום מצטרף לברוטו החייב</span>
+        </div>
+        <div class="field">
+          <label>שווי שימוש — רכב נוכחי (₪)</label>
+          <input type="number" id="f-cur-benefit" value="4100" min="0" step="50" oninput="onParamsChange()">
+          <span class="hint">חייב במס בלבד (לא מזומן). 0 אם אין רכב</span>
+        </div>
+        <div class="field">
+          <label>עלות עובד — רכב נוכחי (₪)</label>
+          <input type="number" id="f-cur-cost" value="3800" min="0" step="50" oninput="onParamsChange()">
+          <span class="hint">מה העובד משלם על הרכב הנוכחי. 0 אם אין רכב</span>
+        </div>
+      </div>
+
+      <div class="salary-summary">
+        <div class="kv"><span>נטו נוכחי (בפועל)</span><span id="s-net">—</span></div>
+        <div class="kv"><span>ברוטו בסיס</span><span id="s-gross">—</span></div>
+        <div class="kv"><span>תקציב רכב</span><span id="s-budget">—</span></div>
+        <div class="kv"><span>שווי שימוש נוכחי</span><span id="s-cur-benefit">—</span></div>
+        <div class="kv"><span>הפרשות סוציאליות</span><span id="s-soc">—</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 2 — Excel Upload
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section" id="sec2">
+    <div class="section-head open" id="head2" onclick="toggleSection(2)">
+      <div class="section-num" id="num2">2</div>
+      <div>
+        <h2>העלאת רשימת רכבים (Excel)</h2>
+        <p style="font-size:13px;color:#64748b;margin-top:1px">קובץ המכיל יצרן, דגם, עלות לעובד ושווי שימוש</p>
+      </div>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="section-body open" id="body2">
+
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="file-input" accept=".xlsx,.xls" onchange="onFileSelected(this.files[0])">
+        <div class="dz-icon">📊</div>
+        <p>גרור לכאן קובץ Excel או לחץ לבחירה</p>
+        <p class="dz-sub">.xlsx / .xls · העמודות יזוהו אוטומטית</p>
+      </div>
+
+      <div class="upload-status" id="upload-status"></div>
+
+      <div class="col-mapper" id="col-mapper">
+        <h3>⚠️ לא זוהו כל העמודות אוטומטית — בחר ידנית:</h3>
+        <div class="map-grid">
+          <div><label>יצרן / מותג</label><select id="map-mfr"></select></div>
+          <div><label>דגם</label><select id="map-mdl"></select></div>
+          <div><label>עלות לעובד (₪/חודש)</label><select id="map-cost"></select></div>
+          <div><label>שווי שימוש (₪/חודש)</label><select id="map-ben"></select></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary btn-sm" onclick="applyManualMap()">✓ אשר מיפוי</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Calculate CTA -->
+  <div style="text-align:center; margin: 0 0 28px;">
+    <button class="btn btn-primary" id="calc-btn" onclick="doCalculate()" disabled
+            style="padding:14px 36px; font-size:17px;">
+      <span class="spinner" id="calc-spinner"></span>
+      <span id="calc-label">⚡ חשב השפעה על שכר</span>
+    </button>
+    <p id="calc-hint" style="font-size:13px;color:#94a3b8;margin-top:8px;">
+      יש להעלות קובץ רכבים ולמלא את נתוני השכר תחילה
+    </p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 3 — Results
+  ══════════════════════════════════════════════════════════ -->
+  <div id="results">
+
+    <div class="results-header">
+      <h2>📈 תוצאות — השפעה על שכר נטו</h2>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 ייצוא CSV</button>
+        <button class="btn btn-ghost btn-sm" onclick="doCalculate()">🔄 חשב מחדש</button>
+      </div>
+    </div>
+
+    <div class="summary-cards" id="sum-cards"></div>
+
+    <div class="notice">
+      💡 <b>שינוי נטו</b> מחושב ביחס לנטו הנוכחי שלך: <b>₪<span id="notice-net">—</span></b>.
+      <span style="color:#15803d;font-weight:700;">ירוק = עלייה בנטו</span> ·
+      <span style="color:#dc2626;font-weight:700;">אדום = ירידה בנטו</span>.
+      לחץ על שורה לפרטים מלאים.
+    </div>
+
+    <div style="margin-top:14px;" class="table-wrap">
+      <table class="res-table">
+        <thead id="res-thead"></thead>
+        <tbody id="res-tbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div><!-- /page -->
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────────────────────────────────
+const state = {
+  cars:       [],
+  rawRows:    [],
+  headers:    [],
+  result:     null,
+  sortCol:    'delta_vs_current',
+  sortDir:    -1,   // -1=desc, 1=asc
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const v = id => parseFloat($(id).value) || 0;
+const fmt   = (n, d=0) => Number(n).toLocaleString('he-IL',
+  {minimumFractionDigits:d, maximumFractionDigits:d});
+const fmtD  = n => {
+  if (n == null) return '—';
+  if (Math.abs(n) < 0.5) return '±₪0';
+  return n > 0 ? `+₪${fmt(Math.abs(n),0)}` : `-₪${fmt(Math.abs(n),0)}`;
+};
+const cls   = n => (!n || Math.abs(n) < 0.5) ? 'neu' : (n > 0 ? 'pos' : 'neg');
+const esc   = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Section toggle
+// ─────────────────────────────────────────────────────────────────────────────
+function toggleSection(n) {
+  const body = $('body'+n), head = $('head'+n);
+  const open = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  head.classList.toggle('open', !open);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Salary summary
+// ─────────────────────────────────────────────────────────────────────────────
+function onParamsChange() {
+  $('s-net').textContent         = `₪${fmt(v('f-net'),2)}`;
+  $('s-gross').textContent       = `₪${fmt(v('f-gross'),0)}`;
+  $('s-budget').textContent      = `₪${fmt(v('f-budget'),0)}`;
+  $('s-cur-benefit').textContent = `₪${fmt(v('f-cur-benefit'),0)}`;
+  $('s-soc').textContent         = `₪${fmt(v('f-soc'),2)}`;
+  updateBtn();
+}
+
+function updateBtn() {
+  const ready = state.cars.length > 0 && v('f-net') > 0;
+  $('calc-btn').disabled = !ready;
+  $('calc-hint').style.display = ready ? 'none' : '';
+}
+
+function salaryPayload() {
+  return {
+    gross:             v('f-gross'),
+    income_tax_actual: v('f-it'),
+    ni_actual:         v('f-ni'),
+    health_actual:     0,
+    social_deductions: v('f-soc'),
+    net_actual:        v('f-net'),
+    credit_points:     v('f-cp'),
+    area_credit_pct:   v('f-area-pct'),
+    area_credit_cap:   v('f-area-cap'),
+    car_budget:        v('f-budget'),
+    cur_car_benefit:   v('f-cur-benefit'),
+    cur_car_cost:      v('f-cur-cost'),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// File upload
+// ─────────────────────────────────────────────────────────────────────────────
+const dropZone = $('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0]; if (f) onFileSelected(f);
+});
+
+async function onFileSelected(file) {
+  if (!file) return;
+  const st = $('upload-status');
+  st.style.display = 'block'; st.className = 'upload-status';
+  st.textContent = '⏳ מנתח קובץ...';
+
+  const fd = new FormData(); fd.append('file', file);
+  try {
+    const res = await fetch('/upload-cars', { method:'POST', body:fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'שגיאה');
+
+    state.headers = data.headers || [];
+
+    if (data.ok && data.cars?.length) {
+      state.cars = data.cars;
+      $('col-mapper').style.display = 'none';
+      st.className = 'upload-status success';
+      st.innerHTML = `✅ נטענו <b>${data.cars.length}</b> רכבים בהצלחה`;
+      markDone(2);
+    } else {
+      state.rawRows = data.raw_rows || [];
+      showMapper(data.headers || []);
+      st.className = 'upload-status error';
+      st.textContent = data.message || 'לא זוהו עמודות אוטומטית — בחר ידנית';
+    }
+    updateBtn();
+  } catch(e) {
+    st.className = 'upload-status error';
+    st.textContent = `❌ שגיאה: ${e.message}`;
+  }
+}
+
+function showMapper(headers) {
+  $('col-mapper').style.display = 'block';
+  ['map-mfr','map-mdl','map-cost','map-ben'].forEach(id => {
+    $(id).innerHTML = headers.map((h,i) =>
+      `<option value="${i}">${h || '(עמודה '+(i+1)+')'}</option>`).join('');
+  });
+}
+
+async function applyManualMap() {
+  const body = {
+    headers: state.headers, rows: state.rawRows,
+    col_manufacturer: +$('map-mfr').value,
+    col_model:        +$('map-mdl').value,
+    col_cost:         +$('map-cost').value,
+    col_benefit:      +$('map-ben').value,
+  };
+  const res = await fetch('/map-columns', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (data.ok && data.cars.length) {
+    state.cars = data.cars;
+    $('col-mapper').style.display = 'none';
+    const st = $('upload-status');
+    st.className = 'upload-status success';
+    st.innerHTML = `✅ נטענו <b>${data.cars.length}</b> רכבים`;
+    markDone(2); updateBtn();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Calculate
+// ─────────────────────────────────────────────────────────────────────────────
+async function doCalculate() {
+  const btn = $('calc-btn'), sp = $('calc-spinner'), lbl = $('calc-label');
+  btn.disabled = true; sp.style.display = 'block'; lbl.textContent = 'מחשב...';
+  try {
+    const res = await fetch('/calculate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ salary: salaryPayload(), cars: state.cars }),
+    });
+    if (!res.ok) throw new Error((await res.json()).detail);
+    const data = await res.json();
+    state.result = data;
+    renderResults(data);
+    markDone(1); markDone(2);
+    $('results').style.display = 'block';
+    $('results').scrollIntoView({ behavior:'smooth', block:'start' });
+  } catch(e) {
+    alert(`שגיאה בחישוב: ${e.message}`);
+  } finally {
+    btn.disabled = false; sp.style.display = 'none';
+    lbl.textContent = '⚡ חשב השפעה על שכר';
+    updateBtn();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Render
+// ─────────────────────────────────────────────────────────────────────────────
+const COLS = [
+  { key:'car',              label:'יצרן / דגם',       sort: r => r.manufacturer+r.model,  noSort:false },
+  { key:'employee_cost',    label:'עלות לעובד',        sort: r => r.employee_cost,          noSort:false },
+  { key:'benefit_value',    label:'שווי שימוש',        sort: r => r.benefit_value,          noSort:false },
+  { key:'it_delta',         label:'שינוי מס הכנסה',   sort: r => r.it_delta,               noSort:false },
+  { key:'delta_vs_current', label:'שינוי נטו',         sort: r => r.delta_vs_current,       noSort:false },
+  { key:'expected_net',     label:'נטו צפוי',          sort: r => r.expected_net,           noSort:false },
+];
+
+function renderResults(data) {
+  const net = v('f-net');
+  $('notice-net').textContent = fmt(net, 2);
+
+  const cars    = data.cars;
+  const best    = [...cars].sort((a,b) => b.delta_vs_current - a.delta_vs_current)[0];
+  const worst   = [...cars].sort((a,b) => a.delta_vs_current - b.delta_vs_current)[0];
+  const ncDelta = data.no_car_delta;
+
+  $('sum-cards').innerHTML = `
+    <div class="scard blue">
+      <div class="sc-label">נטו נוכחי (בפועל)</div>
+      <div class="sc-val">₪${fmt(net,0)}</div>
+      <div class="sc-sub">נקודת הבסיס להשוואה</div>
+    </div>
+    <div class="scard yellow">
+      <div class="sc-label">ללא רכב (תקציב → ברוטו)</div>
+      <div class="sc-val">₪${fmt(data.no_car_expected,0)}</div>
+      <div class="sc-sub"><span class="${cls(ncDelta)}">${fmtD(ncDelta)}</span> מהנוכחי</div>
+    </div>
+    <div class="scard green">
+      <div class="sc-label">🏆 האפשרות הכי כדאית</div>
+      <div class="sc-val">₪${fmt(best.expected_net,0)}</div>
+      <div class="sc-sub">${esc(best.manufacturer)} ${esc(best.model)}<br><span class="${cls(best.delta_vs_current)}">${fmtD(best.delta_vs_current)}</span></div>
+    </div>
+    <div class="scard red">
+      <div class="sc-label">⚠️ הכי פחות כדאי</div>
+      <div class="sc-val">₪${fmt(worst.expected_net,0)}</div>
+      <div class="sc-sub">${esc(worst.manufacturer)} ${esc(worst.model)}<br><span class="${cls(worst.delta_vs_current)}">${fmtD(worst.delta_vs_current)}</span></div>
+    </div>
+  `;
+
+  buildTable(data);
+}
+
+function buildTable(data) {
+  const budget   = v('f-budget');
+  const cars     = data.cars;
+  const bestDelta= Math.max(...cars.map(r => r.delta_vs_current));
+
+  // ── thead ──
+  const thead = $('res-thead');
+  thead.innerHTML = '';
+  const htr = document.createElement('tr');
+  COLS.forEach(col => {
+    const th  = document.createElement('th');
+    const isSorted = col.key === state.sortCol;
+    const arrow = isSorted ? (state.sortDir === -1 ? '▼' : '▲') : '▼';
+    th.className = isSorted ? 'sorted' : '';
+    th.innerHTML = `${col.label} <span class="si">${arrow}</span>`;
+    th.onclick = () => {
+      if (state.sortCol === col.key) state.sortDir *= -1;
+      else { state.sortCol = col.key; state.sortDir = -1; }
+      buildTable(data);
+    };
+    htr.appendChild(th);
+  });
+  thead.appendChild(htr);
+
+  // ── tbody ──
+  const tbody = $('res-tbody');
+  tbody.innerHTML = '';
+
+  // Reference: no car
+  const ncTr = document.createElement('tr');
+  ncTr.className = 'ref-nc';
+  ncTr.innerHTML = `
+    <td class="car-cell">💰 ללא רכב<span class="model-sub">תקציב ₪${fmt(budget,0)} מצטרף לברוטו החייב</span></td>
+    <td class="num neu">—</td>
+    <td class="num neu">—</td>
+    <td class="num neu">—</td>
+    <td class="num ${cls(data.no_car_delta)}">${fmtD(data.no_car_delta)}</td>
+    <td class="num net-val">₪${fmt(data.no_car_expected,0)}</td>
+  `;
+  tbody.appendChild(ncTr);
+
+  // Reference: current car
+  const curTr = document.createElement('tr');
+  curTr.className = 'ref-cur';
+  curTr.innerHTML = `
+    <td class="car-cell">🚗 רכב נוכחי<span class="model-sub">שווי שימוש ₪${fmt(v('f-cur-benefit'),0)} · עלות ₪${fmt(v('f-cur-cost'),0)}</span></td>
+    <td class="num neu">₪${fmt(v('f-cur-cost'),0)}</td>
+    <td class="num neu">₪${fmt(v('f-cur-benefit'),0)}</td>
+    <td class="num neu">—</td>
+    <td class="num neu">בסיס</td>
+    <td class="num net-val">₪${fmt(v('f-net'),2)}</td>
+  `;
+  tbody.appendChild(curTr);
+
+  // Sort
+  const col    = COLS.find(c => c.key === state.sortCol);
+  const sorted = col
+    ? [...cars].sort((a,b) => {
+        const va = col.sort(a), vb = col.sort(b);
+        return typeof va === 'string'
+          ? state.sortDir * va.localeCompare(vb, 'he')
+          : state.sortDir * (va - vb);
+      })
+    : cars;
+
+  sorted.forEach(r => {
+    const isBest   = Math.abs(r.delta_vs_current - bestDelta) < 0.01;
+    const costCls  = r.employee_cost <= budget ? 'pos' : 'neg';
+    // it_delta: positive = more tax = bad for employee → show as negative
+    const itSign   = -r.it_delta;   // positive = tax saved
+    const budTag   = r.budget_effect > 0.5
+      ? `<span class="tag surplus">+₪${fmt(r.budget_effect,0)} לברוטו</span>`
+      : r.budget_effect < -0.5
+        ? `<span class="tag deficit">-₪${fmt(Math.abs(r.budget_effect),0)} מהנטו</span>`
+        : `<span class="tag neutral">תקציב מלא</span>`;
+
+    const tr = document.createElement('tr');
+    if (isBest) tr.className = 'best-row';
+    tr.style.cursor = 'pointer';
+    tr.innerHTML = `
+      <td class="car-cell">
+        ${isBest ? '🏆 ' : ''}${esc(r.manufacturer)}
+        <span class="model-sub">${esc(r.model)}</span>
+      </td>
+      <td class="num ${costCls}">₪${fmt(r.employee_cost,0)}</td>
+      <td class="num neu">₪${fmt(r.benefit_value,0)}</td>
+      <td class="num ${cls(itSign)}">${Math.abs(r.it_delta)<0.5 ? '—' : fmtD(itSign)}</td>
+      <td class="num ${cls(r.delta_vs_current)}">${fmtD(r.delta_vs_current)}</td>
+      <td class="num net-val">₪${fmt(r.expected_net,0)}</td>
+    `;
+
+    const dtTr = document.createElement('tr');
+    dtTr.className = 'detail-tr';
+    const dtTd = document.createElement('td');
+    dtTd.className = 'detail-td';
+    dtTd.colSpan = COLS.length;
+    dtTd.innerHTML = buildDetail(r, budTag);
+    dtTr.appendChild(dtTd);
+
+    tr.onclick = () => {
+      const isOpen = dtTr.classList.contains('open');
+      document.querySelectorAll('.detail-tr.open').forEach(el => el.classList.remove('open'));
+      if (!isOpen) dtTr.classList.add('open');
+    };
+
+    tbody.appendChild(tr);
+    tbody.appendChild(dtTr);
+  });
+}
+
+function buildDetail(r, budTag) {
+  const itSign   = -r.it_delta;
+  const nihSign  = -r.ni_hi_delta;
+  const netCls   = cls(r.delta_vs_current);
+  return `<div class="detail-panel">
+    <div><div class="dp-label">יצרן ודגם</div>
+      <div class="dp-val">${esc(r.manufacturer)}<br><span style="font-size:13px;font-weight:400;color:#64748b">${esc(r.model)}</span></div>
+    </div>
+    <div><div class="dp-label">עלות לעובד</div>
+      <div class="dp-val">₪${fmt(r.employee_cost,0)} / חודש</div>
+    </div>
+    <div><div class="dp-label">שווי שימוש (לצרכי מס)</div>
+      <div class="dp-val">₪${fmt(r.benefit_value,0)} / חודש</div>
+    </div>
+    <div><div class="dp-label">השפעת תקציב רכב</div>
+      <div class="dp-val">${budTag}</div>
+    </div>
+    <div><div class="dp-label">שינוי מס הכנסה</div>
+      <div class="dp-val ${cls(itSign)}">${Math.abs(r.it_delta)<0.5 ? '—' : fmtD(itSign)}</div>
+    </div>
+    <div><div class="dp-label">שינוי ל"א + בריאות</div>
+      <div class="dp-val ${cls(nihSign)}">${Math.abs(r.ni_hi_delta)<0.5 ? '—' : fmtD(nihSign)}</div>
+    </div>
+    <div><div class="dp-label">נטו צפוי</div>
+      <div class="dp-val">₪${fmt(r.expected_net,0)}</div>
+    </div>
+    <div><div class="dp-label">שינוי נטו מרכב נוכחי</div>
+      <div class="dp-val ${netCls}" style="font-size:18px">${fmtD(r.delta_vs_current)}</div>
+    </div>
+  </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CSV export
+// ─────────────────────────────────────────────────────────────────────────────
+function exportCSV() {
+  if (!state.result) return;
+  const d = state.result;
+  const rows = [
+    ['יצרן','דגם','עלות לעובד','שווי שימוש','שינוי מס הכנסה','שינוי נטו','נטו צפוי'],
+    ['ללא רכב','','','','',d.no_car_delta.toFixed(2),d.no_car_expected.toFixed(2)],
+    ...d.cars.map(r => [r.manufacturer, r.model, r.employee_cost, r.benefit_value,
+      (-r.it_delta).toFixed(2), r.delta_vs_current.toFixed(2), r.expected_net.toFixed(2)]),
+  ];
+  const csv = '\uFEFF' + rows.map(r =>
+    r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),
+    download: 'leasing_comparison.csv',
+  });
+  a.click();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+function markDone(n) {
+  const el = $('num'+n);
+  if (el) { el.textContent='✓'; el.classList.add('done'); }
+}
+
+// Init
+onParamsChange();
+</script>
+</body>
+</html>
