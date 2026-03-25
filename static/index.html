@@ -352,25 +352,25 @@ td.net-val { font-weight: 700; font-size: 15px; white-space: nowrap; }
       <div class="form-grid">
         <div class="field">
           <label>שכר ברוטו בסיס (₪)</label>
-          <input type="number" id="f-gross" value="22536" min="0" step="1" oninput="onParamsChange()">
+          <input type="number" id="f-gross" value="" min="0" step="1" placeholder="לדוגמה: 20000" oninput="onParamsChange()">
           <span class="hint">ללא תקציב רכב וללא שווי שימוש</span>
         </div>
         <div class="field">
           <label>מס הכנסה (₪)</label>
-          <input type="number" id="f-it" value="0" min="0" step="1" oninput="onParamsChange()">
+          <input type="number" id="f-it" value="" min="0" step="1" placeholder="0" oninput="onParamsChange()">
         </div>
         <div class="field">
           <label>ביטוח לאומי + בריאות (₪)</label>
-          <input type="number" id="f-ni" value="1502" min="0" step="1" oninput="onParamsChange()">
+          <input type="number" id="f-ni" value="" min="0" step="1" placeholder="לדוגמה: 1500" oninput="onParamsChange()">
         </div>
         <div class="field">
           <label>הפרשות סוציאליות (₪)</label>
-          <input type="number" id="f-soc" value="1915.14" min="0" step="0.01" oninput="onParamsChange()">
+          <input type="number" id="f-soc" value="" min="0" step="0.01" placeholder="לדוגמה: 1900" oninput="onParamsChange()">
           <span class="hint">פנסיה, קרן השתלמות וכד׳ — לא ישתנה עם החלפת רכב</span>
         </div>
         <div class="field">
           <label>שכר נטו בפועל (₪) ★</label>
-          <input type="number" id="f-net" value="16560.72" min="0" step="0.01" oninput="onParamsChange()">
+          <input type="number" id="f-net" value="" min="0" step="0.01" placeholder="לדוגמה: 16000" oninput="onParamsChange()">
           <span class="hint">מהתלוש בפועל — בסיס כל ההשוואות (לא מחושב)</span>
         </div>
       </div>
@@ -379,7 +379,7 @@ td.net-val { font-weight: 700; font-size: 15px; white-space: nowrap; }
       <div class="form-grid">
         <div class="field">
           <label>סך נקודות זיכוי</label>
-          <input type="number" id="f-cp" value="11.75" min="0" step="0.25" oninput="onParamsChange()">
+          <input type="number" id="f-cp" value="" min="0" step="0.25" placeholder="לדוגמה: 2.25" oninput="onParamsChange()">
           <span class="hint">₪242 לנקודה לחודש (2025)</span>
         </div>
         <div class="field">
@@ -394,7 +394,7 @@ td.net-val { font-weight: 700; font-size: 15px; white-space: nowrap; }
         </div>
         <div class="field">
           <label>שיעור מס שולי (%)</label>
-          <input type="number" id="f-marginal" value="47" min="0" max="100" step="1" oninput="onParamsChange()">
+          <input type="number" id="f-marginal" value="" min="0" max="100" step="1" placeholder="לדוגמה: 35" oninput="onParamsChange()">
           <span class="hint">המדרגה שבה נמצאת — משפיע על עלות שווי השימוש</span>
         </div>
       </div>
@@ -403,17 +403,17 @@ td.net-val { font-weight: 700; font-size: 15px; white-space: nowrap; }
       <div class="form-grid">
         <div class="field">
           <label>תקציב רכב חודשי (₪)</label>
-          <input type="number" id="f-budget" value="3800" min="0" step="100" oninput="onParamsChange()">
+          <input type="number" id="f-budget" value="" min="0" step="100" placeholder="לדוגמה: 3800" oninput="onParamsChange()">
           <span class="hint">אם לא לוקח רכב — כל הסכום מצטרף לברוטו החייב</span>
         </div>
         <div class="field">
           <label>שווי שימוש — רכב נוכחי (₪)</label>
-          <input type="number" id="f-cur-benefit" value="4100" min="0" step="50" oninput="onParamsChange()">
+          <input type="number" id="f-cur-benefit" value="" min="0" step="50" placeholder="0 אם אין רכב" oninput="onParamsChange()">
           <span class="hint">חייב במס בלבד (לא מזומן). 0 אם אין רכב</span>
         </div>
         <div class="field">
           <label>עלות עובד — רכב נוכחי (₪)</label>
-          <input type="number" id="f-cur-cost" value="3800" min="0" step="50" oninput="onParamsChange()">
+          <input type="number" id="f-cur-cost" value="" min="0" step="50" placeholder="0 אם אין רכב" oninput="onParamsChange()">
           <span class="hint">מה העובד משלם על הרכב הנוכחי. 0 אם אין רכב</span>
         </div>
       </div>
